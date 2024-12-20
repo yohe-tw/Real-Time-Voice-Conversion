@@ -179,7 +179,7 @@ def denormalize_mel(normalized_mel, global_min, global_max):
     return original_mel
 
 
-def plot_mel_spectrogram_direct(mel_spectrogram, title="Mel-Spectrogram"):
+def plot_mel_spectrogram_direct(mel_spectrogram, title="Mel-Spectrogram", path="mel-spec.png"):
     """
     Plots the mel-spectrogram.
     
@@ -205,7 +205,7 @@ def plot_mel_spectrogram_direct(mel_spectrogram, title="Mel-Spectrogram"):
     plt.ylabel("Mel Frequency Bins")
     plt.colorbar(label="Amplitude (dB)")
     plt.tight_layout()
-    plt.show()
+    plt.savefig(path)
 
 
 def stft_loss(predicted, target, n_fft=1024, hop_length=256, win_length=1024):

@@ -72,7 +72,7 @@ class VocalTechniqueDataset(Dataset):
                         self.data_pairs.append(pair)
 
                         # Debug print for clarity
-                        print(f"Added pair: {pair}")
+                        # print(f"Added pair: {pair}")
                         
             
     def __len__(self):
@@ -593,8 +593,8 @@ class VocalTechniqueDataset(Dataset):
                     f"Target: {target_path} ({target_technique})"
                 )
                 
-            print(f"control: {control_song}/{control_clip}, target: {target_song}/{target_clip}")
-            print(f"reference_technique: {reference_technique}, target_technique:{target_technique}")
+            # print(f"control: {control_song}/{control_clip}, target: {target_song}/{target_clip}")
+            # print(f"reference_technique: {reference_technique}, target_technique:{target_technique}")
 
         print("All pairs are valid: Control and target match, reference and target share the same technique.")
         return True

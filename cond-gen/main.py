@@ -21,7 +21,7 @@ from torchsummary import summary
 from utils import parse_wav_files, compute_mel_spectrogram, compute_global_min_max
 from data import VocalTechniqueDataset
 
-sys.path.append('SVEVAE')
+sys.path.append('..')
 from unet.unet_1 import UNet
 print("Switched back to:", os.getcwd())
 
@@ -30,7 +30,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 #################
-base_directory = "."  # Replace with the actual path
+base_directory = "../.."  # Replace with the actual path
 wav_dict = parse_wav_files(base_directory)
 
 # Remove file paths with "Paired_Speech_Group"
@@ -39,25 +39,7 @@ for key, value in wav_dict.items():
         path for path in value['file_path']
         if "Paired_Speech_Group" not in path
     ]
-
-# Display the results
-for key, value in wav_dict.items():
-    print(f"Key: {key}")
-    print(f"Value: {value}")
 #################
-
-
-
-
-
-temp_filepath = wav_dict['不再见_Breathy']['file_path'][0]
-print(temp_filepath)
-mel_spec = compute_mel_spectrogram(temp_filepath, show_plot=True)
-print(mel_spec)
-
-
-
-
 
 
 # Compute global min and max
@@ -68,13 +50,9 @@ global_mel_max = 54
 print(f"Global Mel-Spectrogram Min: {global_mel_min}, Max: {global_mel_max}")
 
 
-
-
 # create dataset
 dataset = VocalTechniqueDataset(wav_dict, global_mel_min=global_mel_min, global_mel_max=global_mel_max)
 dataset.validate_pairs()
-
-
 
 
 # Define split sizes (e.g., 80% train, 10% validation, 10% test)
@@ -108,10 +86,10 @@ for batch in train_loader:
     control = batch["control_mel"]
     reference = batch["reference_mel"]
     technique = batch["technique_mel"]
-    
+    """ 
     print(f"control type: {type(control)}, shape: {control.shape}")
     print(f"reference type: {type(reference)}, shape: {reference.shape}")
-    print(f"technique type: {type(technique)}, shape: {technique.shape}")
+    print(f"technique type: {type(technique)}, shape: {technique.shape}") """
     
     counter = counter + 1
 
@@ -159,54 +137,11 @@ for epoch in range(num_epochs):
     # Print average loss for the epoch
     avg_epoch_loss = epoch_loss / len(train_loader)
     print(f"Epoch {epoch + 1}/{num_epochs} - Average Loss: {avg_epoch_loss:.6f}")
-
-
-
-# eval
-""" model.eval()  # Set the model to evaluation mode
-
-data = train_dataset[0]  # Replace with the desired sample index
-control_mel = data["control_mel"].unsqueeze(0).to(device)
-technique_mel = data["technique_mel"].unsqueeze(0).to(device)
-
-
-print(control_mel.shape)
-
-model_output = None
-
-# Run inference
-with torch.no_grad():  # Disable gradient computation for inference
-    
-    output = model(control_mel)
-    model_output = denormalize_mel(output, global_min=global_mel_min, global_max=global_mel_max)
-    print(model_output) 
-    
-
-# Example usage
-plot_mel_spectrogram_direct(model_output, title="Model Output Mel-Spectrogram")    
-plot_mel_spectrogram_direct(technique_mel, title="Model Output Mel-Spectrogram")
+    torch.save(model.state_dict(), "model.pt")
 
 
 
 
-
-
-
-
-    
-# List of denormalized mel-spectrograms (e.g., model outputs)
-mel_spectrograms = model_output  # Replace with actual tensors
-mel_spectrograms = model_output.squeeze(1)
-mel_spectrograms = mel_spectrograms[:, 40:120, :]  # Select the first 80 mel bins
-
-# Directory to save generated .wav files
-output_dir = "./generated_wavs"
-os.makedirs(output_dir, exist_ok=True)
-
-# Generate audio files
-output_path = os.path.join(output_dir, f"output_nice.wav")
-convert_mel_to_wav(mel_spectrograms, output_path)
-"""
 
 
 
