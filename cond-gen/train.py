@@ -71,9 +71,9 @@ test_size = total_size - train_size - val_size  # Ensures all data is used
 train_dataset, val_dataset, test_dataset = random_split(dataset, [train_size, val_size, test_size])
 
 # Wrap datasets into DataLoader for batching
-train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
-test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False)
+test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False)
 
 # Print dataset sizes
 print(f"Train size: {len(train_dataset)}, Validation size: {len(val_dataset)}, Test size: {len(test_dataset)}")
@@ -85,7 +85,7 @@ model = ContextUnet(in_channels=1, n_classes=5).to(device)
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
-num_epochs = 1
+num_epochs = 10
 
 
 for epoch in range(num_epochs):
@@ -101,9 +101,15 @@ for epoch in range(num_epochs):
             control_mel = batch["control_mel"].to(device)
             reference_mel = batch["reference_mel"].to(device)
             technique_mel = batch["technique_mel"].to(device)
+            label = batch["label"]
+
+            
+            context_mask = torch.zeros_like(label).to(device)
+            context_mask[torch.rand(label.shape) < 0.1] = 1
+
 
             # Forward pass
-            outputs = model(control_mel)
+            outputs = model(control_mel, label.to(device), context_mask)
 
             # Compute the loss
             loss = criterion(outputs, technique_mel)

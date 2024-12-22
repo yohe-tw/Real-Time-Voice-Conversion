@@ -20,6 +20,7 @@ from tqdm import tqdm
 from torchsummary import summary
 from utils import parse_wav_files, denormalize_mel, plot_mel_spectrogram_direct, convert_mel_to_wav
 from data import VocalTechniqueDataset
+from cond_unet import ContextUnet
 
 sys.path.append('..')
 from unet.unet_1 import UNet
@@ -54,14 +55,19 @@ print(f"Global Mel-Spectrogram Min: {global_mel_min}, Max: {global_mel_max}")
 dataset = VocalTechniqueDataset(wav_dict, global_mel_min=global_mel_min, global_mel_max=global_mel_max)
 dataset.validate_pairs()
 
-model = UNet(latent_dim=32).to(device)  # Move to GPU if available
+model = ContextUnet(in_channels=1, n_classes=5).to(device)  # Move to GPU if available
 
-model.load_state_dict(torch.load("model.pt", map_location=device))
+
+
+model.load_state_dict(torch.load("cond.pt", map_location=device))
 model.eval()  # Set the model to evaluation mode
 
 data = dataset[0]  # Replace with the desired sample index
 control_mel = data["control_mel"].unsqueeze(0).to(device)
 technique_mel = data["technique_mel"].unsqueeze(0).to(device)
+label = torch.tensor(data["label"]).unsqueeze(0).to(device)
+
+zero_context_mask = torch.full((1, ), 0).to(device)
 
 
 print(control_mel.shape)
@@ -71,9 +77,9 @@ model_output = None
 # Run inference
 with torch.no_grad():  # Disable gradient computation for inference
     
-    output = model(control_mel)
+    output = model(control_mel, label, zero_context_mask)
     model_output = denormalize_mel(output, global_min=global_mel_min, global_max=global_mel_max)
-    plot_mel_spectrogram_direct(model_output)
+    plot_mel_spectrogram_direct(model_output, path="output.png")
     # print(model_output) 
 
     
@@ -89,3 +95,11 @@ os.makedirs(output_dir, exist_ok=True)
 # Generate audio files
 output_path = os.path.join(output_dir, f"output_nice.wav")
 convert_mel_to_wav(mel_spectrograms, output_path)
+
+plot_mel_spectrogram_direct(technique_mel, path="tech.png")
+print(mel_spectrograms.shape)
+# technique_mel = technique_mel.squeeze(1)
+print(technique_mel.shape)
+technique_mel = F.interpolate(technique_mel, size=(80, technique_mel.size(-1)), mode="bilinear", align_corners=False)
+print(technique_mel.shape)
+convert_mel_to_wav(technique_mel[0], os.path.join(output_dir, f"output_teq.wav"))

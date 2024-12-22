@@ -4,6 +4,7 @@ import os
 import random
 import torch
 import torchaudio
+import numpy as np
 import matplotlib.pyplot as plt
 
 from skimage.transform import resize
@@ -35,6 +36,7 @@ class VocalTechniqueDataset(Dataset):
 
         # techniques list
         techniques = ["Breathy", "Glissando", "Mixed_Voice_and_Falsetto", "Pharyngeal", "Vibrato"]
+        self.technique_to_onehot = {tech: i for i, tech in enumerate(techniques)}
 
         for key, value in data_dict.items():
             # Extract control and technique files
@@ -68,7 +70,7 @@ class VocalTechniqueDataset(Dataset):
                     # Select references
                     selected_references = random.sample(available_references, num_duplicates)
                     for reference_path in selected_references:
-                        pair = (control_path, reference_path, technique_path)
+                        pair = (control_path, reference_path, technique_path, value["technique"])
                         self.data_pairs.append(pair)
 
                         # Debug print for clarity
@@ -488,7 +490,7 @@ class VocalTechniqueDataset(Dataset):
     
     def __getitem__(self, idx):
         
-        control_path, reference_path, target_path = self.data_pairs[idx]
+        control_path, reference_path, target_path, technique = self.data_pairs[idx]
         # print(f"control_path: {control_path}")
         # print(f"reference_path: {reference_path}")
         # print(f"target_path: {target_path}")
@@ -544,13 +546,17 @@ class VocalTechniqueDataset(Dataset):
         # print(f"control_mel.shape: {control_mel.shape}")
         # print(f"reference_mel.shape: {reference_mel.shape}")
         # rint(f"technique_mel.shape: {technique_mel.shape}")
+
+        technique_onehot = self.technique_to_onehot[technique]
+        # print(technique_onehot)
         
         
 
         return {
             "control_mel": control_mel,
             "reference_mel": reference_mel,
-            "technique_mel": technique_mel
+            "technique_mel": technique_mel,
+            "label": technique_onehot
         }
     
     
@@ -566,7 +572,7 @@ class VocalTechniqueDataset(Dataset):
         Returns:
             bool: True if all pairs are valid, otherwise raises an error.
         """
-        for idx, (control_path, reference_path, target_path) in enumerate(self.data_pairs):
+        for idx, (control_path, reference_path, target_path, _) in enumerate(self.data_pairs):
             # Extract song names and clip names
             control_song = os.path.basename(os.path.dirname(os.path.dirname(control_path)))  # e.g., "不再见"
             target_song = os.path.basename(os.path.dirname(os.path.dirname(target_path)))    # e.g., "不再见"

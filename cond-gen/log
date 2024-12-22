@@ -1,0 +1,14 @@
+Switched back to: /tmp2/b10902048/MIR/Real-Time-Voice-Conversion/cond-gen
+Global Mel-Spectrogram Min: -100.0, Max: 54
+Initializing VocalTechniqueDataset
+All pairs are valid: Control and target match, reference and target share the same technique.
+torch.Size([1, 1, 256, 256])
+mel_spectrogram.shape: torch.Size([1, 80, 256])
+waveform.shape: torch.Size([1, 1, 65536])
+Generated audio saved to: ./generated_wavs/output_nice.wav
+torch.Size([1, 80, 256])
+torch.Size([1, 1, 256, 256])
+torch.Size([1, 1, 80, 256])
+mel_spectrogram.shape: torch.Size([1, 80, 256])
+waveform.shape: torch.Size([1, 1, 65536])
+Generated audio saved to: ./generated_wavs/output_teq.wav
