@@ -72,7 +72,7 @@ def compute_mel_spectrogram(
     sample_rate=48000,
     n_fft=2048,
     hop_length=512,
-    n_mels=256,
+    n_mels=80,
     to_db=True,
     show_plot=False
 ):
@@ -293,7 +293,8 @@ def convert_mel_to_wav(mel_spectrogram, output_path):
         plt.show()
 
         # Save the waveform
-        torchaudio.save(output_path, waveform, bundle.sample_rate)
+        # torchaudio.save(output_path, waveform, bundle.sample_rate)
+        torchaudio.save(output_path, waveform, 48000)
 
     print(f"Generated audio saved to: {output_path}")
 

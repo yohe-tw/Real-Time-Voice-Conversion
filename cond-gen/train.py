@@ -23,7 +23,7 @@ from data import VocalTechniqueDataset
 from cond_unet import ContextUnet
 
 sys.path.append('..')
-from unet.unet_1 import UNet
+from unet.unet_2 import UNet
 print("Switched back to:", os.getcwd())
 
 # Ensure device is set
@@ -80,8 +80,8 @@ print(f"Train size: {len(train_dataset)}, Validation size: {len(val_dataset)}, T
 
 
 
-# model = UNet(latent_dim=32).to(device)  # Move to GPU if available
-model = ContextUnet(in_channels=1, n_classes=5).to(device)
+model = UNet(latent_dim=32).to(device)  # Move to GPU if available
+# model = ContextUnet(in_channels=1, n_classes=5).to(device)
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
@@ -104,12 +104,11 @@ for epoch in range(num_epochs):
             label = batch["label"]
 
             
-            context_mask = torch.zeros_like(label).to(device)
-            context_mask[torch.rand(label.shape) < 0.1] = 1
+            
 
 
             # Forward pass
-            outputs = model(control_mel, label.to(device), context_mask)
+            outputs = model(control_mel, label.to(device), 0.1)
 
             # Compute the loss
             loss = criterion(outputs, technique_mel)
@@ -129,7 +128,7 @@ for epoch in range(num_epochs):
     # Print average loss for the epoch
     avg_epoch_loss = epoch_loss / len(train_loader)
     print(f"Epoch {epoch + 1}/{num_epochs} - Average Loss: {avg_epoch_loss:.6f}")
-    torch.save(model.state_dict(), "model.pt")
+    torch.save(model.state_dict(), "cond1.pt")
 
 
 

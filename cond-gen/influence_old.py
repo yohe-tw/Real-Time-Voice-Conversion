@@ -18,7 +18,7 @@ import numpy as np
 import sys
 from tqdm import tqdm
 from torchsummary import summary
-from utils import parse_wav_files, denormalize_mel, plot_mel_spectrogram_direct, convert_mel_to_wav, compute_mel_spectrogram, convert_mel_to_wav2
+from utils import parse_wav_files, denormalize_mel, plot_mel_spectrogram_direct, convert_mel_to_wav
 from data import VocalTechniqueDataset
 from cond_unet import ContextUnet
 
@@ -42,10 +42,6 @@ for key, value in wav_dict.items():
     ]
 #################
 
-test_mel = compute_mel_spectrogram("../../Chinese/ZH-Alto-1/Pharyngeal/你就不要想起我/Pharyngeal_Group/0002.wav")
-plot_mel_spectrogram_direct(test_mel, path="test.png")
-convert_mel_to_wav2(test_mel[0], os.path.join("./generated_wavs", f"output_test.wav"))
-
 
 # Compute global min and max
 # global_mel_min, global_mel_max = compute_global_min_max(wav_dict)
@@ -59,7 +55,7 @@ print(f"Global Mel-Spectrogram Min: {global_mel_min}, Max: {global_mel_max}")
 dataset = VocalTechniqueDataset(wav_dict, global_mel_min=global_mel_min, global_mel_max=global_mel_max)
 dataset.validate_pairs()
 
-model = ContextUnet(in_channels=1, n_classes=5).to(device)  # Move to GPU if available
+model = Unet(latent_dim=32).to(device)  # Move to GPU if available
 
 
 
@@ -71,9 +67,6 @@ control_mel = data["control_mel"].unsqueeze(0).to(device)
 technique_mel = data["technique_mel"].unsqueeze(0).to(device)
 label = torch.tensor(data["label"]).unsqueeze(0).to(device)
 
-print(data["tech_path"])
-
-zero_context_mask = torch.full((1, ), 0).to(device)
 
 
 print(control_mel.shape)
@@ -83,7 +76,7 @@ model_output = None
 # Run inference
 with torch.no_grad():  # Disable gradient computation for inference
     
-    output = model(control_mel, label, zero_context_mask)
+    output = model(control_mel)
     model_output = denormalize_mel(output, global_min=global_mel_min, global_max=global_mel_max)
     plot_mel_spectrogram_direct(model_output, path="output.png")
     # print(model_output) 
@@ -105,9 +98,7 @@ convert_mel_to_wav(mel_spectrograms, output_path)
 plot_mel_spectrogram_direct(technique_mel, path="tech.png")
 print(mel_spectrograms.shape)
 # technique_mel = technique_mel.squeeze(1)
-
-""" technique_mel = F.interpolate(technique_mel, size=(80, technique_mel.size(-1)), mode="bilinear", align_corners=False)
-convert_mel_to_wav(technique_mel[0], os.path.join(output_dir, f"output_teq.wav")) """
-
-
-convert_mel_to_wav(control_mel[0, :, 40:120, :], os.path.join(output_dir, f"output_teq.wav"))
+print(technique_mel.shape)
+technique_mel = F.interpolate(technique_mel, size=(80, technique_mel.size(-1)), mode="bilinear", align_corners=False)
+print(technique_mel.shape)
+convert_mel_to_wav(technique_mel[0], os.path.join(output_dir, f"output_teq.wav"))

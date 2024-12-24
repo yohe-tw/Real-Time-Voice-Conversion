@@ -424,7 +424,7 @@ class VocalTechniqueDataset(Dataset):
         sample_rate=48000,
         n_fft=2048,
         hop_length=512,
-        n_mels=256,
+        n_mels=80,
         to_db=True,
         show_plot=False
     ):
@@ -550,13 +550,14 @@ class VocalTechniqueDataset(Dataset):
         technique_onehot = self.technique_to_onehot[technique]
         # print(technique_onehot)
         
-        
 
         return {
             "control_mel": control_mel,
             "reference_mel": reference_mel,
             "technique_mel": technique_mel,
-            "label": technique_onehot
+            "label": technique_onehot,
+            # "tech_path": target_path,
+            # "target_mel": target_waveform
         }
     
     

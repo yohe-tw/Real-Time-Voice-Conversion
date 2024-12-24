@@ -80,8 +80,8 @@ print(f"Train size: {len(train_dataset)}, Validation size: {len(val_dataset)}, T
 
 
 
-# model = UNet(latent_dim=32).to(device)  # Move to GPU if available
-model = ContextUnet(in_channels=1, n_classes=5).to(device)
+model = UNet(latent_dim=32).to(device)  # Move to GPU if available
+# model = ContextUnet(in_channels=1, n_classes=5).to(device)
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
