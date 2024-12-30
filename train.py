@@ -1,38 +1,37 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import torchaudio
 import torchaudio.transforms
 import torchaudio.functional
 import torch.optim as optim
 import torch
 import os
-from torch.utils.data import Dataset, DataLoader, random_split
-from collections import OrderedDict
-import psutil  # For monitoring memory usage
-from torch.nn.functional import cosine_similarity
-import random
-import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
+from torch.utils.data import DataLoader, random_split
 import sys
 from tqdm import tqdm
-from torchsummary import summary
-from utils import parse_wav_files, compute_mel_spectrogram, compute_global_min_max
-from data import VocalTechniqueDataset
-from cond_unet import ContextUnet
-
-sys.path.append('..')
+from utils.utils import parse_wav_files
+from utils.data import VocalTechniqueDataset
+from utils.loss import SobelEdgeLoss
 from unet.unet_2 import UNet
-print("Switched back to:", os.getcwd())
+import argparse
 
 # Ensure device is set
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 #################
-base_directory = "../.."  # Replace with the actual path
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--output_path', type=str, default="./outputmodel")
+    parser.add_argument('--dataset_path', type=str, default="..")
+    args = parser.parse_args()
+    return args
+
+args = parse_args()
+
+
+base_directory = args.dataset_path # Replace with the actual path
 wav_dict = parse_wav_files(base_directory)
+os.makedirs(args.output_path, exist_ok=True)
 
 # Remove file paths with "Paired_Speech_Group"
 for key, value in wav_dict.items():
@@ -82,7 +81,7 @@ print(f"Train size: {len(train_dataset)}, Validation size: {len(val_dataset)}, T
 
 model = UNet(latent_dim=32).to(device)  # Move to GPU if available
 # model = ContextUnet(in_channels=1, n_classes=5).to(device)
-criterion = nn.MSELoss()
+criterion = SobelEdgeLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
 num_epochs = 10
@@ -102,11 +101,8 @@ for epoch in range(num_epochs):
             reference_mel = batch["reference_mel"].to(device)
             technique_mel = batch["technique_mel"].to(device)
             label = batch["label"]
-
-            
-            
-
-
+            print(control_mel.shape)
+            print(label.shape)
             # Forward pass
             outputs = model(control_mel, label.to(device), 0.1)
 
@@ -128,7 +124,7 @@ for epoch in range(num_epochs):
     # Print average loss for the epoch
     avg_epoch_loss = epoch_loss / len(train_loader)
     print(f"Epoch {epoch + 1}/{num_epochs} - Average Loss: {avg_epoch_loss:.6f}")
-    torch.save(model.state_dict(), "cond1.pt")
+    torch.save(model.state_dict(), os.path.join(args.output_path, "cond.pt"))
 
 
 
